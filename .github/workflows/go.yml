@@ -1,37 +1,26 @@
 name: Go
 
 on:
-  push:
-    branches: [ master, develop ]
   pull_request:
-    branches: [ master, develop ]
+    branches: [ main, develop ]
 
 jobs:
-
   build:
     name: Build & Verify
     runs-on: ubuntu-latest
     steps:
-
-    - name: Set up Go 1.13
-      uses: actions/setup-go@v1
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+    - uses: actions/setup-go@v4
       with:
         go-version: 1.13
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
     - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-
+      run: go get -v -t -d ./...
     - name: Build
       run: go build -v .
-
     - name: Test
-      run: go test ./...
+      run: go test -v ./... -tags $GO_TEST_TAGS
       env:
+        GO_TEST_TAGS: ${{ github.ref == 'refs/heads/main' && 'integration' || 'unit' }}
         ADYEN_API_KEY: ${{ secrets.ADYEN_API_KEY }}
         ADYEN_MERCHANT: ${{ secrets.ADYEN_MERCHANT }}
         ADYEN_PASSWORD: ${{ secrets.ADYEN_PASSWORD }}
